@@ -1,7 +1,7 @@
 # path:
-ckpt: /path/to/t2v.pt
+ckpt: /data/hf_models/Latte/t2v_v20240523.pt
 save_img_path: "./sample_videos/t2v"
-pretrained_model_path: "/path/to/t2v_required_models"
+pretrained_model_path: "/data/hf_models/Latte/t2v_required_models"
 
 # model config: 
 model: LatteT2V
@@ -27,10 +27,10 @@ enable_temporal_attentions: True
 enable_vae_temporal_decoder: True # use temporal vae decoder from SVD, maybe reduce the video flicker (It's not widely tested)
 
 text_prompt: [
-              'Yellow and black tropical fish dart through the sea.',
-              'An epic tornado attacking above aglowing city at night.',
-              'Slow pan upward of blazing oak fire in an indoor fireplace.',
+#              'Yellow and black tropical fish dart through the sea.',
+#              'An epic tornado attacking above aglowing city at night.',
+#              'Slow pan upward of blazing oak fire in an indoor fireplace.',
               'a cat wearing sunglasses and working as a lifeguard at pool.',
-              'Sunset over the sea.',
-              'A dog in astronaut suit and sunglasses floating in space.',
+#              'Sunset over the sea.',
+#              'A dog in astronaut suit and sunglasses floating in space.',
               ]
