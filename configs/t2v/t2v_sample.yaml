@@ -14,7 +14,7 @@ beta_schedule: "linear"
 variance_type: "learned_range"
 
 # model speedup
-use_compile: False
+use_compile: True
 use_fp16: True
 
 # sample config:
