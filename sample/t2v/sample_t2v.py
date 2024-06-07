@@ -23,6 +23,8 @@ from models import get_models
 from utils import save_video_grid
 import imageio
 
+torch.backends.cuda.matmul.allow_fp16_reduced_precision_reduction = False
+
 class IterationProfiler:
     def __init__(self):
         self.begin = None
@@ -188,6 +190,7 @@ def main(args):
         print(f"Warmup time: {end - begin:.3f}s")
         print("=======================================")
 
+        torch.manual_seed(args.seed)
         begin = time.time()
         videos = pipe(prompt, 
                       video_length=args.video_length, 
