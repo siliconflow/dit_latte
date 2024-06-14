@@ -23,7 +23,6 @@ from models import get_models
 from utils import save_video_grid
 import imageio
 
-torch.backends.cuda.matmul.allow_fp16_reduced_precision_reduction = False
 
 class IterationProfiler:
     def __init__(self):
@@ -153,7 +152,10 @@ def main(args):
     if args.use_compile:
         from onediffx import compile_pipe
         # options = '{"mode": "max-optimize:max-autotune:freezing:benchmark:cudagraphs", "memory_format": "channels_last"}'
-        options = '{"mode": "max-autotune:cudagraphs", "memory_format": "channels_last"}'
+        # options = '{"mode": "max-autotune:cudagraphs", "memory_format": "channels_last"}'
+        options = '{"mode": "max-optimize:max-autotune:freezing:benchmark:low-precision:cudagraphs",  \
+            "memory_format": "channels_last", "options": {"inductor.optimize_linear_epilogue": false, \
+            "triton.fuse_attention_allow_fp16_reduction": false}}'
         pipe = compile_pipe(pipe, backend="nexfort", options=options, fuse_qkv_projections=True)
     # pipe.enable_xformers_memory_efficient_attention()
 
