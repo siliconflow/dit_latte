@@ -210,7 +210,7 @@ class BasicTransformerBlock_(nn.Module):
         elif self.use_ada_layer_norm_zero:
             self.norm1 = AdaLayerNormZero(dim, num_embeds_ada_norm)
         else:
-            self.norm1 = nn.LayerNorm(dim, elementwise_affine=norm_elementwise_affine, eps=norm_eps)
+            self.norm1 = nn.LayerNorm(dim, elementwise_affine=norm_elementwise_affine, eps=norm_eps) # go here
 
         self.attn1 = Attention(
             query_dim=dim,
@@ -291,7 +291,7 @@ class BasicTransformerBlock_(nn.Module):
             )
         elif self.use_layer_norm:
             norm_hidden_states = self.norm1(hidden_states)
-        elif self.use_ada_layer_norm_single:
+        elif self.use_ada_layer_norm_single: # go here
             shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (
                 self.scale_shift_table[None] + timestep.reshape(batch_size, 6, -1)
             ).chunk(6, dim=1)
@@ -891,7 +891,7 @@ class LatteT2V(ModelMixin, ConfigMixin):
                         hidden_states = rearrange(hidden_states, '(b t) f d -> (b f) t d', b=input_batch_size).contiguous()
 
                     else:
-                        if i == 0:
+                        if i == 0 and frame > 1:
                             hidden_states = hidden_states + self.temp_pos_embed
                         
                         hidden_states = temp_block(
@@ -943,48 +943,3 @@ class LatteT2V(ModelMixin, ConfigMixin):
     def get_1d_sincos_temp_embed(self, embed_dim, length):
         pos = torch.arange(0, length).unsqueeze(1)
         return get_1d_sincos_pos_embed_from_grid(embed_dim, pos)
-    
-    @classmethod
-    def from_pretrained_2d(cls, pretrained_model_path, subfolder=None, **kwargs):
-        if subfolder is not None:
-            pretrained_model_path = os.path.join(pretrained_model_path, subfolder)
-
-
-        config_file = os.path.join(pretrained_model_path, 'config.json')
-        if not os.path.isfile(config_file):
-            raise RuntimeError(f"{config_file} does not exist")
-        with open(config_file, "r") as f:
-            config = json.load(f)
-        
-        model = cls.from_config(config, **kwargs)
-        
-        # model_files = [
-        #     os.path.join(pretrained_model_path, 'diffusion_pytorch_model.bin'),
-        #     os.path.join(pretrained_model_path, 'diffusion_pytorch_model.safetensors')
-        # ]
-
-        # model_file = None
-
-        # for fp in model_files:
-        #     if os.path.exists(fp):
-        #         model_file = fp
-
-        # if not model_file:
-        #     raise RuntimeError(f"{model_file} does not exist")
-
-        # if model_file.split(".")[-1] == "safetensors":
-        #     from safetensors import safe_open
-        #     state_dict = {}
-        #     with safe_open(model_file, framework="pt", device="cpu") as f:
-        #         for key in f.keys():
-        #             state_dict[key] = f.get_tensor(key)
-        # else:
-        #     state_dict = torch.load(model_file, map_location="cpu")
-        
-        # for k, v in model.state_dict().items():
-        #     if 'temporal_transformer_blocks' in k:
-        #         state_dict.update({k: v})
-
-        # model.load_state_dict(state_dict)
-
-        return model

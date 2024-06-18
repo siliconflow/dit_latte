@@ -38,8 +38,7 @@ def get_models(args):
                 extras=args.extras
             )
     elif 'LatteT2V' in args.model:
-        pretrained_model_path = args.pretrained_model_path
-        return LatteT2V.from_pretrained_2d(pretrained_model_path, subfolder="transformer", video_length=args.video_length)
+        return LatteT2V.from_pretrained(args.pretrained_model_path, subfolder="transformer", video_length=args.video_length)
     elif 'Latte' in args.model:
         return Latte_models[args.model](
                 input_size=args.latent_size,

@@ -1,9 +1,10 @@
 # path:
-ckpt: /data/hf_models/Latte/t2v_v20240523.pt
-save_img_path: "./sample_videos/t2v"
-pretrained_model_path: "/data/hf_models/Latte/t2v_required_models"
+save_img_path: "./sample_videos/t2v-"
+pretrained_model_path: "/data/hf_models/Latte-1"
 
 # model config: 
+# maxin-cn/Latte-0: the first released version
+# maxin-cn/Latte-1: the second version with better performance (released on May. 23, 2024)
 model: LatteT2V
 video_length: 16
 image_size: [512, 512]
@@ -18,10 +19,10 @@ use_compile: True
 use_fp16: True
 
 # sample config:
-seed: 20
+seed: 0
 run_time: 0
 guidance_scale: 7.5
-sample_method: 'PNDM'
+sample_method: 'DDIM'
 num_sampling_steps: 50
 enable_temporal_attentions: True
 enable_vae_temporal_decoder: True # use temporal vae decoder from SVD, maybe reduce the video flicker (It's not widely tested)
