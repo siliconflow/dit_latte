@@ -9,10 +9,10 @@ bash sample/t2v/run.sh
 
 ### Output
 ```
-Warmup time: 39.553s
-Inference time: 38.903s
-Iterations per second: 1.569
-Max used CUDA memory : 19.933GiB
+Warmup time: 33.291s
+Inference time: 32.618s
+Iterations per second: 1.60
+Max used CUDA memory : 28.208GiB
 ```
 
 
@@ -25,8 +25,8 @@ bash sample/t2v/run.sh
 
 ### Output
 ```
-Warmup time: 208.849s
-Inference time: 27.059s(-32%)
-Iterations per second: 2.225(+42%)
-Max used CUDA memory : 18.207GiB
+Warmup time: 572.877s
+Inference time: 22.601s(-30.7%)
+Iterations per second: 2.27(+41.9%)
+Max used CUDA memory : 24.753GiB
 ```
