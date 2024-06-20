@@ -1,3 +1,5 @@
+Note this is a fork from: https://github.com/Vchitect/Latte
+
 ## Latte: Latent Diffusion Transformer for Video Generation<br><sub>Official PyTorch Implementation</sub>
 
 <!-- ### [Paper](https://arxiv.org/abs/2401.03048v1) | [Project Page](https://maxin-cn.github.io/latte_project/) -->
