@@ -2,6 +2,8 @@ import os
 import torch
 import argparse
 import torchvision
+import time
+import inspect
 
 
 from diffusers.schedulers import (DDIMScheduler, DDPMScheduler, PNDMScheduler, 
@@ -20,6 +22,31 @@ from models import get_models
 from utils import save_video_grid
 import imageio
 from torchvision.utils import save_image
+
+class IterationProfiler:
+    def __init__(self):
+        self.begin = None
+        self.end = None
+        self.num_iterations = 0
+
+    def get_iter_per_sec(self):
+        if self.begin is None or self.end is None:
+            return None
+        self.end.synchronize()
+        dur = self.begin.elapsed_time(self.end)
+        return self.num_iterations / dur * 1000.0
+
+    def callback_on_step_end(self, pipe, i, t, callback_kwargs={}):
+        if self.begin is None:
+            event = torch.cuda.Event(enable_timing=True)
+            event.record()
+            self.begin = event
+        else:
+            event = torch.cuda.Event(enable_timing=True)
+            event.record()
+            self.end = event
+            self.num_iterations += 1
+        return callback_kwargs
 
 def main(args):
     # torch.manual_seed(args.seed)
@@ -114,12 +141,22 @@ def main(args):
                                                   variance_type=args.variance_type)
 
 
-    videogen_pipeline = LattePipeline(vae=vae, 
+    pipe = LattePipeline(vae=vae, 
                                  text_encoder=text_encoder, 
                                  tokenizer=tokenizer, 
                                  scheduler=scheduler, 
                                  transformer=transformer_model).to(device)
     # videogen_pipeline.enable_xformers_memory_efficient_attention()
+
+    if args.use_compile:
+        from onediffx import compile_pipe
+        # options = '{"mode": "max-optimize:max-autotune:freezing:benchmark:cudagraphs", "memory_format": "channels_last"}'
+        # options = '{"mode": "max-autotune:cudagraphs", "memory_format": "channels_last"}'
+        options = '{"mode": "max-optimize:max-autotune:freezing:benchmark:low-precision",  \
+            "memory_format": "channels_last", "options": {"inductor.optimize_linear_epilogue": false, \
+            "triton.fuse_attention_allow_fp16_reduction": false}}'
+        pipe = compile_pipe(pipe, backend="nexfort", options=options, fuse_qkv_projections=True)
+    # pipe.enable_xformers_memory_efficient_attention()
 
     if not os.path.exists(args.save_img_path):
         os.makedirs(args.save_img_path)
@@ -127,17 +164,56 @@ def main(args):
     # video_grids = []
     for num_prompt, prompt in enumerate(args.text_prompt):
         print('Processing the ({}) prompt'.format(prompt))
-        videos = videogen_pipeline(prompt, 
-                                video_length=args.video_length, 
-                                height=args.image_size[0], 
-                                width=args.image_size[1], 
-                                num_inference_steps=args.num_sampling_steps,
-                                guidance_scale=args.guidance_scale,
-                                enable_temporal_attentions=args.enable_temporal_attentions,
-                                num_images_per_prompt=1,
-                                mask_feature=True,
-                                enable_vae_temporal_decoder=args.enable_vae_temporal_decoder
-                                ).video
+        iter_profiler = IterationProfiler()
+        kwarg_inputs = {}
+        if "callback_on_step_end" in inspect.signature(pipe).parameters:
+            kwarg_inputs["callback_on_step_end"] = iter_profiler.callback_on_step_end
+        elif "callback" in inspect.signature(pipe).parameters:
+            kwarg_inputs["callback"] = iter_profiler.callback_on_step_end
+
+        begin = time.time()
+        print("=======================================")
+        print("Begin warmup")
+        videos = pipe(prompt, 
+                      video_length=args.video_length, 
+                      height=args.image_size[0], 
+                      width=args.image_size[1], 
+                      num_inference_steps=args.num_sampling_steps,
+                      guidance_scale=args.guidance_scale,
+                      enable_temporal_attentions=args.enable_temporal_attentions,
+                      num_images_per_prompt=1,
+                      mask_feature=True,
+                      enable_vae_temporal_decoder=args.enable_vae_temporal_decoder,
+                      ).video
+        end = time.time()
+        print("End warmup")
+        print(f"Warmup time: {end - begin:.3f}s")
+        print("=======================================")
+
+        torch.manual_seed(args.seed)
+        begin = time.time()
+        videos = pipe(prompt, 
+                      video_length=args.video_length, 
+                      height=args.image_size[0], 
+                      width=args.image_size[1], 
+                      num_inference_steps=args.num_sampling_steps,
+                      guidance_scale=args.guidance_scale,
+                      enable_temporal_attentions=args.enable_temporal_attentions,
+                      num_images_per_prompt=1,
+                      mask_feature=True,
+                      enable_vae_temporal_decoder=args.enable_vae_temporal_decoder,
+                      **kwarg_inputs,
+                      ).video
+        end = time.time()
+        print("=======================================")
+        print(f"Inference time: {end - begin:.3f}s")
+        iter_per_sec = iter_profiler.get_iter_per_sec()
+        if iter_per_sec is not None:
+            print(f"Iterations per second: {iter_per_sec:.3f}")
+
+        cuda_mem_after_used = torch.cuda.max_memory_allocated() / (1024 ** 3)
+        print(f"Max used CUDA memory : {cuda_mem_after_used:.3f}GiB")
+        print("=======================================")
         if videos.shape[1] == 1:
             try:
                 save_image(videos[0][0], args.save_img_path + prompt.replace(' ', '_') + '.png')

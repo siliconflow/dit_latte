@@ -1,0 +1,6 @@
+omegaconf
+tensorboard
+sentencepiece
+einops
+timm
+imageio
