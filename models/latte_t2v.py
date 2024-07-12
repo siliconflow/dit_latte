@@ -1,3 +1,10 @@
+from packaging import version
+import importlib
+import importlib.metadata
+
+diffusers_0250_v = version.parse("0.25.0")
+diffusers_version = version.parse(importlib.metadata.version("diffusers"))
+
 import torch
 
 import os
@@ -8,7 +15,12 @@ from einops import rearrange, repeat
 from typing import Any, Dict, Optional, Tuple
 from diffusers.models import Transformer2DModel
 from diffusers.utils import USE_PEFT_BACKEND, BaseOutput, deprecate
-from diffusers.models.embeddings import get_1d_sincos_pos_embed_from_grid, ImagePositionalEmbeddings, CaptionProjection, PatchEmbed, CombinedTimestepSizeEmbeddings
+from diffusers.models.embeddings import get_1d_sincos_pos_embed_from_grid, ImagePositionalEmbeddings, PatchEmbed
+if diffusers_version < diffusers_0250_v:
+    from diffusers.models.embeddings import CaptionProjection, CombinedTimestepSizeEmbeddings
+else:
+    from diffusers.models.embeddings import PixArtAlphaTextProjection as CaptionProjection
+    from diffusers.models.embeddings import PixArtAlphaCombinedTimestepSizeEmbeddings as CombinedTimestepSizeEmbeddings
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.modeling_utils import ModelMixin
 from diffusers.models.attention import BasicTransformerBlock

@@ -1,6 +1,6 @@
 # path:
 save_img_path: "./sample_videos/t2v-"
-pretrained_model_path: "maxin-cn/Latte-1"
+pretrained_model_path: "/data/hf_models/Latte-1"
 
 # model config: 
 # maxin-cn/Latte-0: the first released version
@@ -15,7 +15,7 @@ beta_schedule: "linear"
 variance_type: "learned_range"
 
 # model speedup
-use_compile: False
+use_compile: True
 use_fp16: True
 
 # sample config:
@@ -28,10 +28,10 @@ enable_temporal_attentions: True
 enable_vae_temporal_decoder: True # use temporal vae decoder from SVD, maybe reduce the video flicker (It's not widely tested)
 
 text_prompt: [
-              'Yellow and black tropical fish dart through the sea.',
-              'An epic tornado attacking above aglowing city at night.',
-              'Slow pan upward of blazing oak fire in an indoor fireplace.',
+#              'Yellow and black tropical fish dart through the sea.',
+#              'An epic tornado attacking above aglowing city at night.',
+#              'Slow pan upward of blazing oak fire in an indoor fireplace.',
               'a cat wearing sunglasses and working as a lifeguard at pool.',
-              'Sunset over the sea.',
-              'A dog in astronaut suit and sunglasses floating in space.',
+#              'Sunset over the sea.',
+#              'A dog in astronaut suit and sunglasses floating in space.',
               ]

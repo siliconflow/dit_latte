@@ -1,2 +1,4 @@
 .vscode
 preprocess
+sample_videos/
+__pycache__/
